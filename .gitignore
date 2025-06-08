@@ -1,0 +1,4 @@
+.history
+bazel*
+*.lock
+target/

@@ -1,0 +1,61 @@
+###############################################################################
+# Bazel now uses Bzlmod by default to manage external dependencies.
+# Please consider migrating your external dependencies from WORKSPACE to MODULE.bazel.
+#
+# For more details, please check https://github.com/bazelbuild/bazel/issues/18958
+###############################################################################
+
+module(
+    name = "spudlife",
+    version = "1.0",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "rules_rust", version = "0.61.0")
+bazel_dep(name = "rules_jvm_external", version = "6.7")
+bazel_dep(name = "rules_oci", version = "2.2.6")
+bazel_dep(name = "rules_pkg", version = "1.1.0")
+
+# Rust toolchain configuration
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    versions = ["1.87.0"],
+)
+
+
+# OCI container configuration
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+# Pull base images
+oci.pull(
+    name = "java_base",
+    image = "gcr.io/distroless/java:latest",
+    platforms = ["linux/arm64"],
+)
+oci.pull(
+    name = "linux_base",
+    image = "ubuntu:24.04",
+    platforms = ["linux/amd64","linux/arm64"],
+)
+oci.pull(
+    name = "distroless_cc",
+    digest = "sha256:8aad707f96620ee89e27febef51b01c6ff244277a3560fcfcfbe68633ef09193",
+    image = "gcr.io/distroless/cc",
+    platforms = ["linux/amd64","linux/arm64"],
+)
+oci.pull(
+    name = "envoy_base",
+    image = "envoyproxy/envoy-dev:latest",
+    platforms = ["linux/arm64"],
+)
+use_repo(oci, "envoy_base", "java_base", "linux_base", "distroless_cc")
+
+# crate deps
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+# setup your cargo workspace projects here
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml", "//my_rust_project:Cargo.toml"],
+)
+use_repo(crate, "crates")

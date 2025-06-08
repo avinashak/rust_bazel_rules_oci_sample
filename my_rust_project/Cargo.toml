@@ -1,0 +1,11 @@
+[package]
+name = "my_rust_project"
+version = "0.1.0"
+authors = ["Potato Sprout <sprout@example_tubers.com>"]
+edition = "2024"
+
+[dependencies]
+# copied examples from a random old project
+# upgrade these before use
+tokio = { version = "1", features = ["full"] }
+mini-redis = "0.4"
